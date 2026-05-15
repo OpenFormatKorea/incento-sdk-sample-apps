@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../contexts/AuthContext'
 import Nav from '../components/Nav'
 
@@ -8,12 +8,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!username || !password) return
+
     login(username)
-    navigate('/')
+    
+    const params = new URLSearchParams(location.search)
+    navigate(params.has('show_incento_popup') ? '/?incento_popup=true' : '/')
   }
 
   return (

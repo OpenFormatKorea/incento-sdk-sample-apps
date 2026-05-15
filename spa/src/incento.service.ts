@@ -12,6 +12,7 @@ interface IIncento {
 interface BootConfig {
   apiKey: string;
   userId?: string | null;
+  visible?: boolean;
   debug?: boolean;
 }
 type EventName = 'widgetOpen' | 'widgetClose' | 'loginRequired';

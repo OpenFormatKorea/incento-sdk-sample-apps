@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import Incento from './incento.service'
-
-const INCENTO_WIDGET_ALLOW_PAGES = ['/', '/mypage']
+import { INCENTO_WIDGET_ALLOW_PAGES } from './constants'
 
 export function Layout() {
   const location = useLocation()

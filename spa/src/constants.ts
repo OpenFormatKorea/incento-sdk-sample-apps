@@ -1,0 +1,1 @@
+export const INCENTO_WIDGET_ALLOW_PAGES = ['/', '/mypage']
