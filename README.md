@@ -6,8 +6,7 @@
 - 목적
   - 실제 개발 환경에서 SDK를 테스트하기 위해 이 레포에 각 환경을 구성함
 - 구성
-  - `/spa` pnpm, Vite, React
-  - `/mpa` pnpm, Next.js
-  - `/web-ios`
-  - `/web-android`
+  - `/web-spa` pnpm, Vite, React
+  - `/web-mpa` pnpm, Next.js
+  - `/app-webview` pnpm, React Native WebView
 
