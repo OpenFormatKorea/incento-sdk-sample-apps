@@ -8,5 +8,5 @@
 - 구성
   - `/web-spa` pnpm, Vite, React
   - `/web-mpa` pnpm, Next.js
-  - `/app-webview` pnpm, React Native WebView
+  - `/app-webview_cross_platform` pnpm, React Native WebView
 
