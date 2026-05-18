@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_LINKS = [
@@ -17,7 +16,7 @@ export default function Nav({ username }: { username?: string | null }) {
       {NAV_LINKS.map(({ href, label }) => {
         const isActive = pathname === href
         return (
-          <Link
+          <a
             key={href}
             href={href}
             style={{
@@ -29,7 +28,7 @@ export default function Nav({ username }: { username?: string | null }) {
             }}
           >
             {label}
-          </Link>
+          </a>
         )
       })}
       {username && (
