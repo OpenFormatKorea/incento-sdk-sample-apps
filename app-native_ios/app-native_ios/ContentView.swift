@@ -8,22 +8,21 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var auth: AuthManager
+
     var body: some View {
-        TabView {
+        TabView(selection: $auth.selectedTab) {
             HomeView()
-                .tabItem {
-                    Label("홈", systemImage: "house")
-                }
+                .tabItem { Label("홈", systemImage: "house") }
+                .tag(0)
 
             ProductsView()
-                .tabItem {
-                    Label("상품", systemImage: "bag")
-                }
+                .tabItem { Label("상품", systemImage: "bag") }
+                .tag(1)
 
             MyPageView()
-                .tabItem {
-                    Label("My", systemImage: "person")
-                }
+                .tabItem { Label("My", systemImage: "person") }
+                .tag(2)
         }
     }
 }

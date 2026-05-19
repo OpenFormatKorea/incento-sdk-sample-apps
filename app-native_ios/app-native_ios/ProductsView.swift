@@ -11,6 +11,7 @@ struct ProductsView: View {
             Text("상품")
                 .navigationTitle("상품")
         }
+        .onAppear { IncentoService.shared.hide() }
     }
 }
 

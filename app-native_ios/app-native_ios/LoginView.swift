@@ -14,24 +14,23 @@ struct LoginView: View {
         VStack(spacing: 32) {
             Spacer()
 
-            VStack(spacing: 8) {
-                Text("로그인")
-                    .font(.largeTitle)
-                    .bold()
-                Text("마이페이지를 이용하려면 로그인이 필요해요.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+            Text("마이페이지를 이용하려면 로그인이 필요해요.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
 
             VStack(spacing: 12) {
                 TextField("아이디를 입력하세요", text: $username)
-                    .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 14)
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator), lineWidth: 0.5))
 
                 SecureField("비밀번호를 입력하세요", text: $password)
-                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 14)
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator), lineWidth: 0.5))
 
                 Button {
                     auth.login(username: username.isEmpty ? "사용자" : username)

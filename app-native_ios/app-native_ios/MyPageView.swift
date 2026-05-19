@@ -24,6 +24,13 @@ struct MyPageView: View {
                     .navigationTitle("마이페이지")
             }
         }
+        .onAppear {
+            if auth.isLoggedIn {
+                IncentoService.shared.show()
+            } else {
+                IncentoService.shared.hide()
+            }
+        }
     }
 }
 
