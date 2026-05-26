@@ -103,7 +103,7 @@ public final class IncentoService: NSObject {
         }
         log("boot — campaignId: \(campaignId)")
 
-        async let launcherImage = fetchLauncherImage(campaignId: campaignId)
+        async let launcherConfig = fetchLauncherConfig(campaignId: campaignId)
 
         var components = URLComponents(string: widgetBaseUrl)!
         components.queryItems = [
@@ -115,8 +115,8 @@ public final class IncentoService: NSObject {
         ]
         widgetUrl = components.url?.absoluteString ?? ""
 
-        let image = await launcherImage
-        await MainActor.run { mountWidget(launcherImage: image) }
+        let launcher = await launcherConfig
+        await MainActor.run { mountWidget(launcherConfig: launcher) }
     }
 
     // MARK: - Auth
@@ -175,6 +175,15 @@ public final class IncentoService: NSObject {
         let PC: String?
     }
 
+    private struct LauncherConfig {
+        let image: UIImage?
+        let width: CGFloat
+        let height: CGFloat
+        let right: CGFloat
+        let bottom: CGFloat
+        let cornerRadius: CGFloat
+    }
+
     private struct Envelope<T: Decodable>: Decodable {
         let data: T
     }
@@ -206,16 +215,46 @@ public final class IncentoService: NSObject {
         return res?.data.campaign_id
     }
 
-    private func fetchLauncherImage(campaignId: String) async -> UIImage? {
-        guard let url = URL(string: "\(baseApiUrl)/sdk/widget/button-visuals/\(campaignId)/") else { return nil }
+    private func fetchLauncherConfig(campaignId: String) async -> LauncherConfig {
+        var width: CGFloat = 56
+        var height: CGFloat = 56
+        var right: CGFloat = 20
+        var bottom: CGFloat = 64
+        var cornerRadius: CGFloat = 0
+
+        guard let url = URL(string: "\(baseApiUrl)/sdk/widget/button-visuals/\(campaignId)/") else {
+            return LauncherConfig(image: nil, width: width, height: height, right: right, bottom: bottom, cornerRadius: cornerRadius)
+        }
         var req = URLRequest(url: url)
         req.setValue(apiKey, forHTTPHeaderField: "X-Incento-Key")
         guard let (data, _) = try? await URLSession.shared.data(for: req),
               let res = try? JSONDecoder().decode(Envelope<ButtonVisualsResponse>.self, from: data),
-              let css = res.data.MOBILE,
-              let imageUrl = extractBackgroundImageUrl(from: css),
-              let (imageData, _) = try? await URLSession.shared.data(from: imageUrl) else { return nil }
-        return UIImage(data: imageData)
+              let css = res.data.MOBILE else {
+            return LauncherConfig(image: nil, width: width, height: height, right: right, bottom: bottom, cornerRadius: cornerRadius)
+        }
+
+        if let w = parseCssPixelValue(css, property: "width") { width = w }
+        if let h = parseCssPixelValue(css, property: "height") { height = h }
+        if let r = parseCssPixelValue(css, property: "right") { right = r }
+        if let b = parseCssPixelValue(css, property: "bottom") { bottom = b }
+        if let br = parseCssPixelValue(css, property: "border-radius") { cornerRadius = br }
+
+        var image: UIImage? = nil
+        if let imageUrl = extractBackgroundImageUrl(from: css),
+           let (imageData, _) = try? await URLSession.shared.data(from: imageUrl) {
+            image = UIImage(data: imageData)
+        }
+
+        return LauncherConfig(image: image, width: width, height: height, right: right, bottom: bottom, cornerRadius: cornerRadius)
+    }
+
+    private func parseCssPixelValue(_ css: String, property: String) -> CGFloat? {
+        let escaped = NSRegularExpression.escapedPattern(for: property)
+        guard let regex = try? NSRegularExpression(pattern: "\(escaped):\\s*([\\d.]+)px"),
+              let match = regex.firstMatch(in: css, range: NSRange(css.startIndex..., in: css)),
+              let range = Range(match.range(at: 1), in: css),
+              let value = Double(css[range]) else { return nil }
+        return CGFloat(value)
     }
 
     private func extractBackgroundImageUrl(from css: String) -> URL? {
@@ -228,7 +267,7 @@ public final class IncentoService: NSObject {
 
     // MARK: - UI
 
-    private func mountWidget(launcherImage: UIImage? = nil) {
+    private func mountWidget(launcherConfig: LauncherConfig) {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first?.windows.first(where: { $0.isKeyWindow }) else { return }
@@ -302,15 +341,23 @@ public final class IncentoService: NSObject {
 
         // 런처 버튼
         let btn = UIButton(type: .custom)
-        if let launcherImage {
-            btn.setImage(launcherImage, for: .normal)
+        if let image = launcherConfig.image {
+            btn.setImage(image, for: .normal)
             btn.imageView?.contentMode = .scaleAspectFit
         } else {
             btn.backgroundColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
         }
-        btn.layer.cornerRadius = 28
-        btn.clipsToBounds = true
-        btn.frame = CGRect(x: window.bounds.width - 76, y: window.bounds.height - 120, width: 56, height: 56)
+        if launcherConfig.cornerRadius > 0 {
+            btn.layer.cornerRadius = launcherConfig.cornerRadius
+            btn.clipsToBounds = true
+        }
+        let safeBottom = window.safeAreaInsets.bottom
+        btn.frame = CGRect(
+            x: window.bounds.width - launcherConfig.right - launcherConfig.width,
+            y: window.bounds.height - launcherConfig.bottom - launcherConfig.height - safeBottom,
+            width: launcherConfig.width,
+            height: launcherConfig.height
+        )
         btn.isHidden = !launcherVisible
         btn.addTarget(self, action: #selector(launcherTapped), for: .touchUpInside)
         window.addSubview(btn)

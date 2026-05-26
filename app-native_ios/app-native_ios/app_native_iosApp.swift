@@ -40,7 +40,7 @@ struct app_native_iosApp: App {
         auth.pendingWidgetOpen = false
         IncentoService.shared.shutdown()
         IncentoService.shared.boot(
-            apiKey: "inc_pk_live_9230dc93331a446b4b81362b613a9faa26740f70aa40fe8b541f5e0c9d2ae934",
+            apiKey: Secrets.incentoApiKey,
             userId: auth.username,
             visible: auth.isLoggedIn,
             autoOpen: shouldOpen,
