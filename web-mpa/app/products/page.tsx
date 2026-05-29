@@ -1,3 +1,5 @@
+import IncentoBoot from "@/app/components/IncentoBoot";
+
 const PRODUCTS = [
   { id: 1, name: '상품 A', price: '12,000원', description: '첫 번째 상품' },
   { id: 2, name: '상품 B', price: '34,000원', description: '두 번째 상품' },
@@ -8,6 +10,7 @@ const PRODUCTS = [
 export default function ProductsPage() {
   return (
     <div style={{ padding: 32 }}>
+      <IncentoBoot visible={false} />
       <h1 style={{ marginBottom: 24 }}>제품 목록</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
         {PRODUCTS.map(product => (
