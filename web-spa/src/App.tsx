@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './contexts/AuthContext'
 import Incento from './incento.service'
+import { getUserCreatedAt } from './mockUserDb'
 import { Layout } from './Layout'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
@@ -32,10 +33,11 @@ function App() {
   useEffect(() => {
     Incento.shutdown()
 
-    Incento.boot({ 
+    Incento.boot({
       apiKey: import.meta.env.VITE_INCENTO_API_KEY,
-      userId: username, 
-      visible: INCENTO_WIDGET_ALLOW_PAGES.includes(location.pathname), 
+      userId: username,
+      userCreatedAt: getUserCreatedAt(username),
+      visible: INCENTO_WIDGET_ALLOW_PAGES.includes(location.pathname),
       debug: true
     })
   }, [username])

@@ -46,6 +46,7 @@ object IncentoService {
 
     private var apiKey = ""
     private var userId: String? = null
+    private var userCreatedAt: String? = null
     private var launcherVisible = true
     private var debugMode = false
     private var widgetUrl = ""
@@ -72,19 +73,21 @@ object IncentoService {
         activity: Activity,
         apiKey: String,
         userId: String? = null,
+        userCreatedAt: String? = null,
         visible: Boolean = true,
         autoOpen: Boolean = false,
         debug: Boolean = false,
     ) {
         this.apiKey = apiKey
         this.userId = userId
+        this.userCreatedAt = userCreatedAt
         this.launcherVisible = visible
         this.pendingOpen = autoOpen
         this.debugMode = debug
         this.prefs = activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         scope.launch {
-            log("boot — apiKey: $apiKey, userId: $userId, visible: $visible, autoOpen: $autoOpen, debug: $debug")
+            log("boot — apiKey: $apiKey, userId: $userId, userCreatedAt: $userCreatedAt, visible: $visible, autoOpen: $autoOpen, debug: $debug")
             val token = handleAuth()
             log("auth — token: ${if (token != null) "ok" else "none"}")
             val campaignId = fetchCampaignId() ?: run {
@@ -178,7 +181,11 @@ object IncentoService {
     private fun requestLoginOrRegister(userId: String): Pair<String, String>? {
         return runCatching {
             val conn = openPost("$BASE_API_URL/sdk/auth/login-or-register/")
-            conn.outputStream.write("""{"user_id":"$userId"}""".toByteArray())
+            val body = JSONObject().apply {
+                put("user_id", userId)
+                userCreatedAt?.let { put("user_created_at", it) }
+            }
+            conn.outputStream.write(body.toString().toByteArray())
             val data = JSONObject(conn.inputStream.bufferedReader().readText()).getJSONObject("data")
             data.getString("access") to data.getString("refresh")
         }.getOrNull()
