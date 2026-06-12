@@ -14,6 +14,7 @@ public final class IncentoService: NSObject {
 
     private var apiKey = ""
     private var userId: String?
+    private var userCreatedAt: String?
     private var launcherVisible = true
     private var debugMode = false
     private var widgetUrl = ""
@@ -38,12 +39,14 @@ public final class IncentoService: NSObject {
     public func boot(
         apiKey: String,
         userId: String? = nil,
+        userCreatedAt: String? = nil,
         visible: Bool = true,
         autoOpen: Bool = false,
         debug: Bool = false
     ) {
         self.apiKey = apiKey
         self.userId = userId
+        self.userCreatedAt = userCreatedAt
         self.launcherVisible = visible
         self.debugMode = debug
         self.pendingOpen = autoOpen
@@ -93,7 +96,7 @@ public final class IncentoService: NSObject {
     // MARK: - Boot
 
     private func performBoot() async {
-        log("boot — apiKey: \(apiKey), userId: \(userId ?? "nil"), visible: \(launcherVisible), autoOpen: \(pendingOpen), debug: \(debugMode)")
+        log("boot — apiKey: \(apiKey), userId: \(userId ?? "nil"), userCreatedAt: \(userCreatedAt ?? "nil"), visible: \(launcherVisible), autoOpen: \(pendingOpen), debug: \(debugMode)")
         let token = await handleAuth()
         log("auth — token: \(token != nil ? "ok" : "none")")
 
@@ -194,7 +197,9 @@ public final class IncentoService: NSObject {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue(apiKey, forHTTPHeaderField: "X-Incento-Key")
-        req.httpBody = try? JSONSerialization.data(withJSONObject: ["user_id": userId])
+        var requestBody: [String: Any] = ["user_id": userId]
+        if let userCreatedAt { requestBody["user_created_at"] = userCreatedAt }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
         guard let (data, _) = try? await URLSession.shared.data(for: req) else { return nil }
         return try? JSONDecoder().decode(Envelope<AuthResponse>.self, from: data).data
     }

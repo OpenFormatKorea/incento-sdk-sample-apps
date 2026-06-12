@@ -48,10 +48,19 @@ class MainActivity : ComponentActivity() {
             activity = this,
             apiKey = BuildConfig.INCENTO_API_KEY,
             userId = auth.username,
+            userCreatedAt = mockUserCreatedAt(auth.username),
             visible = auth.isLoggedIn,
             autoOpen = shouldOpen,
             debug = true,
         )
+    }
+
+    // 독립몰 자체 회원 DB를 시뮬레이션합니다.
+    // 실제 서비스에서는 고객사 백엔드/세션에서 회원의 원래 가입 일시를 읽어와 전달합니다.
+    // 알려진 기존 회원이면 가입 일시(예시 A: 2년 전)를, 신규 회원이면 null을 반환합니다.
+    private fun mockUserCreatedAt(userId: String?): String? = when (userId) {
+        "member_001" -> "2023-03-15T09:30:00+09:00"
+        else -> null
     }
 }
 
