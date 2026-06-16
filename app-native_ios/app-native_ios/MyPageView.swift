@@ -26,8 +26,10 @@ struct MyPageView: View {
         }
         .onAppear {
             if auth.isLoggedIn {
+                IncentoService.shared.setPath("/mypage")
                 IncentoService.shared.show()
             } else {
+                IncentoService.shared.setPath("/login")
                 IncentoService.shared.hide()
             }
         }
