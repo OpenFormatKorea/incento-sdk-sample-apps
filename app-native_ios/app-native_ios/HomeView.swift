@@ -20,7 +20,10 @@ struct HomeView: View {
             }
             .navigationTitle("홈")
         }
-        .onAppear { IncentoService.shared.show() }
+        .onAppear {
+            IncentoService.shared.setPath("/")
+            IncentoService.shared.show()
+        }
     }
 }
 

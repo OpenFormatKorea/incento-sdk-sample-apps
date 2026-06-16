@@ -73,6 +73,15 @@ fun SdktestappApp(auth: AuthManager) {
         currentDestination = AppDestinations.entries[auth.selectedTab]
     }
 
+    // 화면 전환 시 현재 경로를 SDK에 전달 → 새 경로의 세션 재생성
+    LaunchedEffect(currentDestination, auth.isLoggedIn) {
+        IncentoService.setPath(when (currentDestination) {
+            AppDestinations.HOME -> "/"
+            AppDestinations.PRODUCTS -> "/products"
+            AppDestinations.MYPAGE -> if (auth.isLoggedIn) "/mypage" else "/login"
+        })
+    }
+
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             AppDestinations.entries.forEach { dest ->

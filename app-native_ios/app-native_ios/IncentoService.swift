@@ -19,6 +19,7 @@ public final class IncentoService: NSObject {
     private var debugMode = false
     private var widgetUrl = ""
     private var pendingOpen = false
+    private var currentPath = "/"
 
     private var webView: WKWebView?
     private var containerView: UIView?
@@ -69,6 +70,15 @@ public final class IncentoService: NSObject {
         }
     }
 
+    /// 화면 전환 시 현재 경로를 갱신한다(예: viewDidAppear).
+    /// 위젯이 떠 있으면 경로 변경을 알려 새 경로의 세션을 재생성한다.
+    public func setPath(_ path: String) {
+        currentPath = path
+        DispatchQueue.main.async {
+            self.sendToWidget(["type": "incentoPathChange", "path": path])
+        }
+    }
+
     public func shutdown() {
         DispatchQueue.main.async {
             self.containerView?.removeFromSuperview()
@@ -113,7 +123,7 @@ public final class IncentoService: NSObject {
             URLQueryItem(name: "hostingType", value: "sdk"),
             URLQueryItem(name: "apiKey", value: apiKey),
             URLQueryItem(name: "campaignId", value: campaignId),
-            URLQueryItem(name: "pagePath", value: "/"),
+            URLQueryItem(name: "pagePath", value: currentPath),
             URLQueryItem(name: "isLoggedIn", value: token != nil ? "true" : "false"),
         ]
         widgetUrl = components.url?.absoluteString ?? ""

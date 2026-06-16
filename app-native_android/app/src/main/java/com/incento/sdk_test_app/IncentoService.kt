@@ -51,6 +51,7 @@ object IncentoService {
     private var debugMode = false
     private var widgetUrl = ""
     private var pendingOpen = false
+    private var currentPath = "/"
 
     private var webView: WebView? = null
     private var containerView: FrameLayout? = null
@@ -101,7 +102,7 @@ object IncentoService {
             val params = "hostingType=sdk" +
                 "&apiKey=$apiKey" +
                 "&campaignId=$campaignId" +
-                "&pagePath=/" +
+                "&pagePath=${java.net.URLEncoder.encode(currentPath, "UTF-8")}" +
                 "&isLoggedIn=${token != null}"
             widgetUrl = "$WIDGET_BASE_URL?$params"
 
@@ -119,6 +120,14 @@ object IncentoService {
         launcherView?.visibility = android.view.View.GONE
         launcherVisible = false
         closeWidget()
+    }
+
+    /** 화면 전환 시 현재 경로를 갱신한다(예: onResume). 위젯이 떠 있으면 경로 변경을 알려 새 세션을 재생성한다. */
+    fun setPath(path: String) {
+        currentPath = path
+        mainHandler.post {
+            sendToWidget(JSONObject().put("type", "incentoPathChange").put("path", path))
+        }
     }
 
     fun shutdown() = mainHandler.post {
@@ -280,7 +289,6 @@ object IncentoService {
             addJavascriptInterface(JsBridge(activity), "IncentoNativeBridge")
             webViewClient = object : WebViewClient() {
                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                    log("onPageStarted — window.parent override 주입")
                     view?.evaluateJavascript("""
                         window.parent = {
                             postMessage: function(data, origin) {
@@ -480,7 +488,6 @@ object IncentoService {
     }
 
     private fun sendToWidget(data: JSONObject) {
-        log("JsBridge → $data")
         mainHandler.post {
             webView?.evaluateJavascript("window.postMessage($data, '*')", null)
         }
@@ -491,7 +498,6 @@ object IncentoService {
     private class JsBridge(private val context: Context) {
         @JavascriptInterface
         fun postMessage(jsonStr: String) {
-            log("JsBridge ← ${jsonStr.take(200)}")
             val body = runCatching { JSONObject(jsonStr) }.getOrNull() ?: return
 
             when (body.optString("type")) {

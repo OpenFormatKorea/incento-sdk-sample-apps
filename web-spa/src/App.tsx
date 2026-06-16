@@ -30,6 +30,12 @@ function App() {
     })
   }, [])
 
+  // 라우트 변경 시 현재 경로를 SDK에 전달 → 새 경로의 세션 재생성
+  // (초기 경로는 boot 시 location.pathname 자동 반영, 여기선 변경분만 갱신)
+  useEffect(() => {
+    Incento.setPath(location.pathname)
+  }, [location.pathname])
+
   useEffect(() => {
     Incento.shutdown()
 

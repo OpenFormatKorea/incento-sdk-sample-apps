@@ -27,6 +27,7 @@ x=document.getElementsByTagName('script')[0];if(x.parentNode){x.parentNode.inser
 ){l();}else{w.addEventListener('DOMContentLoaded',l);w.addEventListener('load',l);}})();
   }
   boot(config: BootConfig) { window.Incento?.('boot', config); }
+  setPath(path: string) { window.Incento?.('setPath', path); }
   show() { window.Incento?.('show'); }
   hide() { window.Incento?.('hide'); }
   shutdown() { window.Incento?.('shutdown'); }
