@@ -36,11 +36,12 @@ public final class IncentoService: NSObject {
     }
 
     // MARK: - Public API
-
+    
     public func boot(
         apiKey: String,
         userId: String? = nil,
         userCreatedAt: String? = nil,
+        pagePath: String? = nil,
         visible: Bool = true,
         autoOpen: Bool = false,
         debug: Bool = false
@@ -48,6 +49,7 @@ public final class IncentoService: NSObject {
         self.apiKey = apiKey
         self.userId = userId
         self.userCreatedAt = userCreatedAt
+        if let pagePath { self.currentPath = pagePath }
         self.launcherVisible = visible
         self.debugMode = debug
         self.pendingOpen = autoOpen

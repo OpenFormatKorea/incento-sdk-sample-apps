@@ -15,6 +15,7 @@ interface BootConfig {
   userCreatedAt?: string | null;
   visible?: boolean;
   debug?: boolean;
+  pagePath?: string | null;
 }
 type EventName = 'widgetOpen' | 'widgetClose' | 'loginRequired';
 

@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
             apiKey = BuildConfig.INCENTO_API_KEY,
             userId = auth.username,
             userCreatedAt = mockUserCreatedAt(auth.username),
+            pagePath = "/",
             visible = auth.isLoggedIn,
             autoOpen = shouldOpen,
             debug = true,
