@@ -75,6 +75,7 @@ object IncentoService {
         apiKey: String,
         userId: String? = null,
         userCreatedAt: String? = null,
+        pagePath: String? = null,
         visible: Boolean = true,
         autoOpen: Boolean = false,
         debug: Boolean = false,
@@ -82,6 +83,7 @@ object IncentoService {
         this.apiKey = apiKey
         this.userId = userId
         this.userCreatedAt = userCreatedAt
+        if (pagePath != null) this.currentPath = pagePath
         this.launcherVisible = visible
         this.pendingOpen = autoOpen
         this.debugMode = debug

@@ -43,6 +43,7 @@ struct app_native_iosApp: App {
             apiKey: Secrets.incentoApiKey,
             userId: auth.username,
             userCreatedAt: mockUserCreatedAt(auth.username),
+            pagePath: "/",
             visible: auth.isLoggedIn,
             autoOpen: shouldOpen,
             debug: true,
