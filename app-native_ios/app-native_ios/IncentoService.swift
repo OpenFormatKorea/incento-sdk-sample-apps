@@ -20,6 +20,7 @@ public final class IncentoService: NSObject {
     private var widgetUrl = ""
     private var pendingOpen = false
     private var currentPath = "/"
+    private var sessionPath: String?
 
     private var webView: WKWebView?
     private var containerView: UIView?
@@ -36,7 +37,9 @@ public final class IncentoService: NSObject {
     }
 
     // MARK: - Public API
-    
+
+    /// - Parameter pagePath: 초기 화면 경로. setPath와 동일 기준으로 지정한다.
+    ///   미지정 시 기본값 "/" 사용. 이후 화면 전환분은 setPath(_:)로 갱신.
     public func boot(
         apiKey: String,
         userId: String? = nil,
@@ -73,12 +76,11 @@ public final class IncentoService: NSObject {
     }
 
     /// 화면 전환 시 현재 경로를 갱신한다(예: viewDidAppear).
-    /// 위젯이 떠 있으면 경로 변경을 알려 새 경로의 세션을 재생성한다.
+    /// currentPath 저장만 하고 세션 작업은 하지 않는다. 세션 재생성은 다음 드로어
+    /// 오픈(openDrawer) 시 currentPath != sessionPath일 때 1회만 일어난다 —
+    /// 화면 전환마다가 아니라 "이동 후 최초 오픈"에만 세션을 만든다.
     public func setPath(_ path: String) {
         currentPath = path
-        DispatchQueue.main.async {
-            self.sendToWidget(["type": "incentoPathChange", "path": path])
-        }
     }
 
     public func shutdown() {
@@ -129,6 +131,7 @@ public final class IncentoService: NSObject {
             URLQueryItem(name: "isLoggedIn", value: token != nil ? "true" : "false"),
         ]
         widgetUrl = components.url?.absoluteString ?? ""
+        sessionPath = currentPath
 
         let launcher = await launcherConfig
         await MainActor.run { mountWidget(launcherConfig: launcher) }
@@ -388,6 +391,10 @@ public final class IncentoService: NSObject {
 
     private func openDrawer() {
         guard let container = containerView, let window = windowRef else { return }
+        if sessionPath != nil, currentPath != sessionPath {
+            sendToWidget(["type": "incentoPathChange", "path": currentPath])
+            sessionPath = currentPath
+        }
         backdropView?.isHidden = false
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.85, initialSpringVelocity: 0.3) {
             container.frame.origin.y = window.bounds.height - self.drawerHeight

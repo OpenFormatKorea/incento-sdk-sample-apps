@@ -38,7 +38,6 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 object IncentoService {
-
     private const val BASE_API_URL = "https://api.incento.kr/api/open"
     private const val WIDGET_BASE_URL = "https://widget.incento.kr/v2"
     private const val PREFS_NAME = "incento_prefs"
@@ -52,6 +51,7 @@ object IncentoService {
     private var widgetUrl = ""
     private var pendingOpen = false
     private var currentPath = "/"
+    private var sessionPath: String? = null
 
     private var webView: WebView? = null
     private var containerView: FrameLayout? = null
@@ -70,6 +70,10 @@ object IncentoService {
 
     // MARK: - Public API
 
+    /**
+     * @param pagePath 초기 화면 경로. setPath와 동일 기준으로 지정한다.
+     *   미지정 시 기본값 "/" 사용. 이후 화면 전환분은 setPath(...)로 갱신.
+     */
     fun boot(
         activity: Activity,
         apiKey: String,
@@ -107,6 +111,7 @@ object IncentoService {
                 "&pagePath=${java.net.URLEncoder.encode(currentPath, "UTF-8")}" +
                 "&isLoggedIn=${token != null}"
             widgetUrl = "$WIDGET_BASE_URL?$params"
+            sessionPath = currentPath
 
             val launcherConfig = launcherConfigDeferred.await()
             mainHandler.post { mountWidget(activity, launcherConfig) }
@@ -124,12 +129,14 @@ object IncentoService {
         closeWidget()
     }
 
-    /** 화면 전환 시 현재 경로를 갱신한다(예: onResume). 위젯이 떠 있으면 경로 변경을 알려 새 세션을 재생성한다. */
+    /**
+     * 화면 전환 시 현재 경로를 갱신한다(예: onResume). currentPath 저장만 하고 세션
+     * 작업은 하지 않는다. 세션 재생성은 다음 드로어 오픈(openWidget) 시
+     * currentPath != sessionPath일 때 1회만 일어난다 — 화면 전환마다가 아니라
+     * "이동 후 최초 오픈"에만 세션을 만든다.
+     */
     fun setPath(path: String) {
         currentPath = path
-        mainHandler.post {
-            sendToWidget(JSONObject().put("type", "incentoPathChange").put("path", path))
-        }
     }
 
     fun shutdown() = mainHandler.post {
@@ -450,6 +457,10 @@ object IncentoService {
 
     private fun openWidget() {
         log("widgetOpen")
+        if (sessionPath != null && currentPath != sessionPath) {
+            sendToWidget(JSONObject().put("type", "incentoPathChange").put("path", currentPath))
+            sessionPath = currentPath
+        }
         backdropView?.visibility = View.VISIBLE
         val interp = DecelerateInterpolator(2f)
         AnimatorSet().apply {
