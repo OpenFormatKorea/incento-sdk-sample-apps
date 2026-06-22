@@ -152,7 +152,7 @@ object IncentoService {
     fun open() = mainHandler.post {
         if (containerView == null) return@post
         log("widgetOpen (programmatic)")
-        openWidget()
+        openWidget("E")
     }
 
     fun on(eventName: String, handler: () -> Unit) {
@@ -424,7 +424,7 @@ object IncentoService {
             visibility = if (launcherVisible) View.VISIBLE else View.GONE
             isClickable = true
             isFocusable = true
-            setOnClickListener { openWidget() }
+            setOnClickListener { openWidget("C") }
         }
         if (launcherConfig.image != null) {
             launcher.addView(ImageView(activity).apply {
@@ -451,14 +451,21 @@ object IncentoService {
 
         if (pendingOpen) {
             pendingOpen = false
-            openWidget()
+            openWidget("E")
         }
     }
 
-    private fun openWidget() {
+    private fun openWidget(eventType: String) {
         log("widgetOpen")
         if (sessionPath != null && currentPath != sessionPath) {
-            sendToWidget(JSONObject().put("type", "incentoPathChange").put("path", currentPath))
+            // 경로 변경 후 첫 오픈 → 직전 세션 닫고 재생성. eventType은 "어떻게 열었나"
+            // (런처 탭 "C" / 프로그래밍 open()·autoOpen "E")를 그대로 전달한다.
+            sendToWidget(
+                JSONObject()
+                    .put("type", "incentoPathChange")
+                    .put("path", currentPath)
+                    .put("eventType", eventType),
+            )
             sessionPath = currentPath
         }
         backdropView?.visibility = View.VISIBLE

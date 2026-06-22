@@ -77,7 +77,7 @@ public final class IncentoService: NSObject {
 
     /// 화면 전환 시 현재 경로를 갱신한다(예: viewDidAppear).
     /// currentPath 저장만 하고 세션 작업은 하지 않는다. 세션 재생성은 다음 드로어
-    /// 오픈(openDrawer) 시 currentPath != sessionPath일 때 1회만 일어난다 —
+    /// 오픈(openWidget) 시 currentPath != sessionPath일 때 1회만 일어난다 —
     /// 화면 전환마다가 아니라 "이동 후 최초 오픈"에만 세션을 만든다.
     public func setPath(_ path: String) {
         currentPath = path
@@ -99,7 +99,7 @@ public final class IncentoService: NSObject {
         DispatchQueue.main.async {
             guard self.containerView != nil else { return }
             self.log("widgetOpen (programmatic)")
-            self.openDrawer()
+            self.openWidget(eventType: "E")
         }
     }
 
@@ -385,14 +385,16 @@ public final class IncentoService: NSObject {
 
         if pendingOpen {
             pendingOpen = false
-            openDrawer()
+            openWidget(eventType: "E")
         }
     }
 
-    private func openDrawer() {
+    private func openWidget(eventType: String) {
         guard let container = containerView, let window = windowRef else { return }
         if sessionPath != nil, currentPath != sessionPath {
-            sendToWidget(["type": "incentoPathChange", "path": currentPath])
+            // 경로 변경 후 첫 오픈 → 직전 세션 닫고 재생성. eventType은 "어떻게 열었나"
+            // (런처 탭 "C" / 프로그래밍 open()·autoOpen "E")를 그대로 전달한다.
+            sendToWidget(["type": "incentoPathChange", "path": currentPath, "eventType": eventType])
             sessionPath = currentPath
         }
         backdropView?.isHidden = false
@@ -433,7 +435,7 @@ public final class IncentoService: NSObject {
 
     @objc private func launcherTapped() {
         log("widgetOpen")
-        openDrawer()
+        openWidget(eventType: "C")
     }
 
     private func closeWidget() {
