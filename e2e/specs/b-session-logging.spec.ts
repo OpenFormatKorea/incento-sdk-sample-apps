@@ -91,4 +91,51 @@ test.describe('B. 방문 세션 기록', () => {
       .poll(() => incento.closes().some((e) => e.sessionId === openedSessionId))
       .toBe(true);
   });
+
+  test(
+    '페이지 이동 후 위젯 버튼을 클릭해 위젯을 다시 열면 재생성 세션 type이 오픈 방식(C)으로 기록된다',
+    async ({ page, incento }) => {
+      const app = new AppPom(page);
+      const widget = new WidgetPom(page);
+
+      await app.login();
+      await widget.waitMounted();
+      await widget.open();
+      await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
+
+      await app.navTo('마이페이지');
+      await expect(page).toHaveURL(/\/mypage/);
+
+      // 위젯 버튼 클릭으로 재오픈 → incentoPathChange의 eventType "C" → 재생성 세션 type "C"
+      await widget.close();
+      await widget.open();
+
+      await expect.poll(() => incento.posts('/mypage').length).toBeGreaterThan(0);
+      expect(incento.posts('/mypage')[0]?.type).toBe('C');
+    },
+  );
+
+  test(
+    '같은 페이지에서 닫았다 다시 열고 공유하면, 그 공유가 재사용된 세션 id로 기록된다',
+    async ({ page, incento }) => {
+      const app = new AppPom(page);
+      const widget = new WidgetPom(page);
+
+      await app.login(); // 공유 버튼은 로그인 뷰에 노출
+      await widget.waitMounted();
+      await widget.open();
+      await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
+
+      const sessionId = incento.lastSessionId();
+      expect(sessionId).toBeTruthy();
+
+      await widget.close(); // closed_at만 스탬프, session_id는 유지(#222)
+      await widget.open(); // 같은 경로 재오픈 → 새 세션 없음
+      expect(incento.lastSessionId()).toBe(sessionId);
+
+      // 재오픈 후 공유 → widget-event가 null이 아니라 재사용된 sessionId로 기록되어야 한다
+      await widget.share();
+      await expect.poll(() => incento.lastWidgetEvent()?.eventId).toBe(sessionId);
+    },
+  );
 });

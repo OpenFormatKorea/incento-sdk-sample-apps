@@ -72,4 +72,13 @@ export class WidgetPom {
   async expectLoggedInView(): Promise<void> {
     await expect(this.iframe.getByText('공유하기').first()).toBeVisible();
   }
+
+  /**
+   * 위젯 내부 [공유하기] 클릭 → widget-event(리퍼럴 시도) 기록.
+   * 주의: 활성화(fixme 해제) 시 실제 공유 UI 흐름(카카오/복사 등)에 맞게
+   * 셀렉터·후속 동작을 검증할 것.
+   */
+  async share(): Promise<void> {
+    await this.iframe.getByText('공유하기').first().click();
+  }
 }

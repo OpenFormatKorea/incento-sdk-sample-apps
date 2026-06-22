@@ -18,7 +18,7 @@ export interface LogEvent {
   method: 'POST' | 'PATCH';
   /** POST일 때 요청 body의 path (예: "/", "/mypage") */
   path?: string;
-  /** POST일 때 요청 body의 type (C=클릭, R=라우트, P=팝업 등) */
+  /** POST일 때 요청 body의 type (오픈 방식: C=런처 클릭 / E=커스텀·프로그래밍 / P=URL 팝업) */
   type?: string;
   /** 세션 id (POST는 발급한 id, PATCH는 URL에서 추출한 id) */
   sessionId: string;
@@ -26,14 +26,28 @@ export interface LogEvent {
   t: number;
 }
 
+/** 공유 등 위젯 내부 액션(widget-event). 세션(event_id)에 묶여 기록된다. */
+export interface WidgetEvent {
+  /** 액션 종류 (K=카카오, C=복사, L=로그인 등) */
+  type?: string;
+  /** 이 액션이 묶이는 세션 id (요청 body의 event_id) */
+  eventId?: string;
+  /** 테스트 시작 기준 경과 ms */
+  t: number;
+}
+
 const LOG_EVENT_GLOB = '**/api/open/sdk/log/event/**';
+// widget-event는 별도 경로(`log/widget-event/`)라 LOG_EVENT_GLOB와 겹치지 않는다.
+const WIDGET_EVENT_GLOB = '**/api/open/sdk/log/widget-event/**';
 
 export class IncentoMock {
   readonly events: LogEvent[] = [];
+  readonly widgetEvents: WidgetEvent[] = [];
   private t0 = Date.now();
 
   async install(page: Page): Promise<void> {
     this.t0 = Date.now();
+    await page.route(WIDGET_EVENT_GLOB, (route) => this.handleWidgetEvent(route));
     await page.route(LOG_EVENT_GLOB, (route) => this.handle(route));
   }
 
@@ -68,6 +82,24 @@ export class IncentoMock {
     await route.continue();
   }
 
+  private async handleWidgetEvent(route: Route): Promise<void> {
+    const req = route.request();
+    const t = Date.now() - this.t0;
+
+    if (req.method() === 'POST') {
+      const body = (req.postDataJSON() ?? {}) as { type?: string; event_id?: string };
+      this.widgetEvents.push({ type: body.type, eventId: body.event_id, t });
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { id: crypto.randomUUID() } }),
+      });
+      return;
+    }
+
+    await route.continue();
+  }
+
   /** path로 필터된 open(POST) 이벤트들 */
   posts(path?: string): LogEvent[] {
     return this.events.filter((e) => e.method === 'POST' && (path === undefined || e.path === path));
@@ -81,6 +113,11 @@ export class IncentoMock {
   /** 가장 최근 발급된 세션 id */
   lastSessionId(): string | undefined {
     return [...this.events].reverse().find((e) => e.method === 'POST')?.sessionId;
+  }
+
+  /** 가장 최근 위젯 액션(공유 등) */
+  lastWidgetEvent(): WidgetEvent | undefined {
+    return this.widgetEvents.at(-1);
   }
 }
 
