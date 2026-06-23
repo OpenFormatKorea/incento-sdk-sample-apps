@@ -71,8 +71,8 @@ object IncentoService {
     // MARK: - Public API
 
     /**
-     * @param pagePath 초기 화면 경로. setPath와 동일 기준으로 지정한다.
-     *   미지정 시 기본값 "/" 사용. 이후 화면 전환분은 setPath(...)로 갱신.
+     * 위젯을 초기화하고 런처를 띄운다. 앱 시작 시 1회 호출한다.
+     * @param pagePath 초기 화면 경로. 미지정 시 "/". 이후 전환분은 setPath(...)로 갱신.
      */
     fun boot(
         activity: Activity,
@@ -118,11 +118,13 @@ object IncentoService {
         }
     }
 
+    /** 런처를 표시한다. */
     fun show() = mainHandler.post {
         launcherView?.visibility = android.view.View.VISIBLE
         launcherVisible = true
     }
 
+    /** 런처를 숨긴다. 열려 있던 드로어가 있으면 닫는다. */
     fun hide() = mainHandler.post {
         launcherView?.visibility = android.view.View.GONE
         launcherVisible = false
@@ -130,15 +132,20 @@ object IncentoService {
     }
 
     /**
-     * 화면 전환 시 현재 경로를 갱신한다(예: onResume). currentPath 저장만 하고 세션
-     * 작업은 하지 않는다. 세션 재생성은 다음 드로어 오픈(openWidget) 시
-     * currentPath != sessionPath일 때 1회만 일어난다 — 화면 전환마다가 아니라
-     * "이동 후 최초 오픈"에만 세션을 만든다.
+     * 화면 전환 시 현재 경로를 갱신한다(예: onResume). 정규화된 경로를 넘긴다.
+     * 열려 있던 드로어가 있으면 닫는다.
+     *
+     * 경로별 리퍼럴 시도 추적이 이 호출에 의존한다. 화면 전환 시점에 올바른
+     * 경로로 호출하지 않으면 해당 화면의 리퍼럴 시도가 집계되지 않는다.
      */
     fun setPath(path: String) {
+        if (path != currentPath && backdropView?.visibility == View.VISIBLE) {
+            closeWidget()
+        }
         currentPath = path
     }
 
+    /** 위젯과 런처를 화면에서 제거한다. */
     fun shutdown() = mainHandler.post {
         (containerView?.parent as? ViewGroup)?.removeView(containerView)
         (backdropView?.parent as? ViewGroup)?.removeView(backdropView)
@@ -149,12 +156,21 @@ object IncentoService {
         webView = null
     }
 
+    /** 위젯 드로어를 프로그래밍 방식으로 연다. */
     fun open() = mainHandler.post {
         if (containerView == null) return@post
         log("widgetOpen (programmatic)")
         openWidget("E")
     }
 
+    /** 위젯 드로어를 프로그래밍 방식으로 닫는다. 열려 있지 않으면 아무 동작도 하지 않는다. */
+    fun close() = mainHandler.post {
+        if (containerView == null) return@post
+        log("widgetClose (programmatic)")
+        closeWidget()
+    }
+
+    /** 위젯 이벤트 핸들러를 등록한다. (eventName: "widgetOpen" / "widgetClose" / "loginRequired") */
     fun on(eventName: String, handler: () -> Unit) {
         eventHandlers.getOrPut(eventName) { mutableListOf() }.add(handler)
     }
@@ -406,7 +422,7 @@ object IncentoService {
             }
         }
 
-        // 런처 버튼
+        // 런처
         val btnWidth = (launcherConfig.widthDp * dp).toInt()
         val btnHeight = (launcherConfig.heightDp * dp).toInt()
         val rightMargin = (launcherConfig.rightDp * dp).toInt()
@@ -458,8 +474,6 @@ object IncentoService {
     private fun openWidget(eventType: String) {
         log("widgetOpen")
         if (sessionPath != null && currentPath != sessionPath) {
-            // 경로 변경 후 첫 오픈 → 직전 세션 닫고 재생성. eventType은 "어떻게 열었나"
-            // (런처 탭 "C" / 프로그래밍 open()·autoOpen "E")를 그대로 전달한다.
             sendToWidget(
                 JSONObject()
                     .put("type", "incentoPathChange")
