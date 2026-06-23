@@ -1,10 +1,18 @@
 'use client'
 
+import { useActionState, useEffect } from 'react'
 import { login } from '../actions'
 
 export default function LoginForm({ returnUrl }: { returnUrl: string }) {
+  const [state, formAction] = useActionState(login, { redirectTo: null })
+
+  // 하드 네비게이션(전체 리로드)으로 이동해 boot를 재실행시킵니다. 배경은 actions.ts 주석을 참고해주세요.
+  useEffect(() => {
+    if (state.redirectTo) window.location.assign(state.redirectTo)
+  }, [state])
+
   return (
-    <form action={login} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 280 }}>
+    <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 280 }}>
       <h1 style={{ fontSize: 24, marginBottom: 8, textAlign: 'center' }}>SDK Test Apps - MPA</h1>
       <input type="hidden" name="returnUrl" value={returnUrl} />
       <input
