@@ -1,6 +1,6 @@
-import { test, expect } from '../fixtures/incento-mock';
-import { AppPom } from '../pages/app.pom';
-import { WidgetPom } from '../pages/widget.pom';
+import { test, expect } from '../../fixtures/incento-mock';
+import { AppPom } from '../../pages/spa/app.pom';
+import { WidgetPom } from '../../pages/widget.pom';
 
 /**
  * B. 위젯 세션 로깅 (핵심)

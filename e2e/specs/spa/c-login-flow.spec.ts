@@ -1,6 +1,6 @@
-import { test, expect } from '../fixtures/incento-mock';
-import { AppPom } from '../pages/app.pom';
-import { WidgetPom } from '../pages/widget.pom';
+import { test, expect } from '../../fixtures/incento-mock';
+import { AppPom } from '../../pages/spa/app.pom';
+import { WidgetPom } from '../../pages/widget.pom';
 
 /**
  * C. 로그인 플로우
