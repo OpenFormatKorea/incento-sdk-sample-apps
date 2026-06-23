@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useAuth } from '../contexts/AuthContext'
 import Nav from '../components/Nav'
+import NudgeBanner from '../components/NudgeBanner'
 
 export default function MypagePage() {
   const { username, logout } = useAuth()
@@ -23,6 +24,7 @@ export default function MypagePage() {
         >
           로그아웃
         </button>
+        <NudgeBanner />
       </div>
     </div>
   )

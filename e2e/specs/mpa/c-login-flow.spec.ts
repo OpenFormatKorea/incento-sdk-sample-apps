@@ -41,7 +41,7 @@ test.describe('C. 로그인 플로우 (MPA)', () => {
         .toBe(true);
     });
 
-    await test.step('로그인을 마치면 홈으로 돌아오고 위젯이 다시 열린다', async () => {
+    await test.step('로그인을 마치면 returnUrl로 복귀하고 위젯이 type P로 다시 열린다', async () => {
       await page.getByPlaceholder('아이디').fill('member_001');
       await page.getByPlaceholder('비밀번호').fill('pw1234');
       await page.getByRole('button', { name: '로그인' }).click();

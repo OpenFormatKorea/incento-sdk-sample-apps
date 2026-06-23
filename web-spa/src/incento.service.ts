@@ -31,6 +31,8 @@ x=document.getElementsByTagName('script')[0];if(x.parentNode){x.parentNode.inser
   setPath(path: string) { window.Incento?.('setPath', path); }
   show() { window.Incento?.('show'); }
   hide() { window.Incento?.('hide'); }
+  open() { window.Incento?.('open'); }
+  close() { window.Incento?.('close'); }
   shutdown() { window.Incento?.('shutdown'); }
   on(eventName: EventName, handler: () => void) { window.Incento?.('on', eventName, handler); }
 }
