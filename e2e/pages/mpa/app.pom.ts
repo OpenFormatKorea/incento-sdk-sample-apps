@@ -31,7 +31,9 @@ export class AppPom {
     await this.page.getByPlaceholder('아이디').fill(username);
     await this.page.getByPlaceholder('비밀번호').fill(password);
     await this.page.getByRole('button', { name: '로그인' }).click();
-    await expect(this.page).toHaveURL(new RegExp(returnUrl.replace(/[/]/g, '\\/')));
+    // 폼 제출 → 서버 액션 → window.location.assign(returnUrl) 하드 리다이렉트.
+    // /login을 실제로 벗어날 때까지 기다려야 이후 open()이 진행 중 네비게이션과 충돌하지 않는다.
+    await this.page.waitForURL((url) => !url.pathname.startsWith('/login'));
   }
 
   /** 마이페이지에서 로그아웃 → /login. */
