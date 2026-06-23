@@ -66,6 +66,43 @@ test.describe('B. 방문 세션 기록 (MPA)', () => {
       .toBe(true);
   });
 
+  test('재오픈 후 다시 닫으면 같은 세션에 close PATCH가 또 전송된다(닫을 때마다 PATCH)', async ({
+    page,
+    incento,
+  }) => {
+    const app = new AppPom(page);
+    const widget = new WidgetPom(page);
+
+    await test.step('홈에서 위젯을 열어 세션을 시작한다', async () => {
+      await app.gotoHome();
+      await widget.waitMounted();
+      await widget.open();
+      await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
+    });
+
+    const sessionId = incento.lastSessionId();
+    expect(sessionId).toBeTruthy();
+
+    await test.step('1차 닫기 → 그 세션에 close PATCH 1건', async () => {
+      await widget.close();
+      await expect
+        .poll(() => incento.closes().filter((e) => e.sessionId === sessionId).length)
+        .toBe(1);
+    });
+
+    await test.step('같은 경로 재오픈 → 새 세션 없이 종료된 세션 id를 재사용', async () => {
+      await widget.open();
+      expect(incento.lastSessionId()).toBe(sessionId);
+    });
+
+    await test.step('2차 닫기 → 중복 제거 없이 같은 세션에 close PATCH가 또 전송된다', async () => {
+      await widget.close();
+      await expect
+        .poll(() => incento.closes().filter((e) => e.sessionId === sessionId).length)
+        .toBe(2);
+    });
+  });
+
   test('하드 네비게이션으로 다른 페이지로 이동 후 위젯을 열면 해당 경로로 새 위젯 세션이 생긴다', async ({
     page,
     incento,
