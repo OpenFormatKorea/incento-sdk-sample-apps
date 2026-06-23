@@ -31,4 +31,9 @@ export class AppPom {
     await this.page.getByRole('button', { name: '로그아웃' }).click();
     await expect(this.page).toHaveURL(/\/login/);
   }
+
+  /** 마이페이지 넛징 배너 클릭 → 명령형 open()으로 위젯 열기. */
+  async clickNudgeBanner(): Promise<void> {
+    await this.page.getByTestId('mypage-nudge-banner').click();
+  }
 }

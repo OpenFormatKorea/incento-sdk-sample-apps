@@ -17,6 +17,19 @@ struct MyPageView: View {
                     Button("로그아웃", role: .destructive) {
                         auth.logout()
                     }
+
+                    VStack(spacing: 4) {
+                        Text("마이페이지 넛징 배너").font(.headline)
+                        Text("친구 초대 시 3,000원 즉시 지급!")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 160)
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        IncentoService.shared.open()
+                    }
+                    .padding(.horizontal)
                 }
                 .navigationTitle("마이페이지")
             } else {

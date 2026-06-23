@@ -1,9 +1,13 @@
 package com.incento.sdk_test_app
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.incento.sdk_test_app.ui.theme.SdktestappTheme
@@ -49,6 +54,23 @@ fun MyPageScreen(auth: AuthManager) {
                     ),
                 ) {
                     Text("로그아웃")
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(160.dp)
+                        .border(1.dp, Color.Black)
+                        .clickable { IncentoService.open() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "마이페이지 넛징 배너",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(text = "친구 초대 시 3,000원 즉시 지급!")
+                    }
                 }
             }
         } else {
