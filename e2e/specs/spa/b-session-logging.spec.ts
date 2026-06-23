@@ -14,7 +14,7 @@ import { WidgetPom } from '../../pages/widget.pom';
  * - 같은 페이지 재오픈은 종료된 세션 아이디로 기록 (새 세션 생성 없음).
  */
 test.describe('B. 방문 세션 기록', () => {
-  test('홈에서 위젯을 열면 홈 방문이 기록된다', async ({ page, incento }) => {
+  test('홈에서 위젯을 열면 홈 방문이 기록된다(오픈 방식 C)', async ({ page, incento }) => {
     const app = new AppPom(page);
     const widget = new WidgetPom(page);
 
@@ -23,35 +23,7 @@ test.describe('B. 방문 세션 기록', () => {
     await widget.open();
 
     await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
-  });
-
-  test('페이지를 이동하는 것만으로는 기록되지 않고, 위젯을 다시 열어야 그 페이지 방문이 기록된다', async ({
-    page,
-    incento,
-  }) => {
-    const app = new AppPom(page);
-    const widget = new WidgetPom(page);
-
-    await test.step('로그인하고 홈에서 위젯을 열면 홈 방문이 기록된다', async () => {
-      await app.login();
-      await widget.waitMounted();
-      await widget.open();
-      await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
-    });
-
-    await test.step('마이페이지로 이동만 하면 아직 기록되지 않는다', async () => {
-      await app.navTo('마이페이지');
-      await expect(page).toHaveURL(/\/mypage/);
-      // 경로 변경은 currentPath만 저장 → 위젯을 다시 열기 전까지 세션 POST 없음
-      expect(incento.posts('/mypage').length).toBe(0);
-    });
-
-    await test.step('마이페이지에서 위젯을 다시 열면 그때 마이페이지 방문이 기록된다', async () => {
-      // 최초 오픈(닫힘→열림) 시 currentPath !== sessionPath → incentoPathChange 1회 전송
-      await widget.close();
-      await widget.open();
-      await expect.poll(() => incento.posts('/mypage').length).toBeGreaterThan(0);
-    });
+    expect(incento.posts('/')[0]?.type).toBe('C');
   });
 
   test('같은 페이지에서 위젯을 다시 열어도 새 방문 세션은 만들어지지 않는다', async ({ page, incento }) => {
@@ -93,25 +65,35 @@ test.describe('B. 방문 세션 기록', () => {
   });
 
   test(
-    '페이지 이동 후 위젯 버튼을 클릭해 위젯을 다시 열면 재생성 세션 type이 오픈 방식(C)으로 기록된다',
+    '소프트 네비게이션으로 다른 페이지로 이동 후 위젯을 열면 해당 경로로 새 위젯 세션이 생긴다',
     async ({ page, incento }) => {
       const app = new AppPom(page);
       const widget = new WidgetPom(page);
 
-      await app.login();
-      await widget.waitMounted();
-      await widget.open();
-      await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
+      await test.step('로그인하고 홈에서 위젯을 열면 홈 세션이 생긴다', async () => {
+        await app.login();
+        await widget.waitMounted();
+        await widget.open();
+        await expect.poll(() => incento.posts('/').length).toBeGreaterThan(0);
+      });
 
-      await app.navTo('마이페이지');
-      await expect(page).toHaveURL(/\/mypage/);
+      const homeSession = incento.lastSessionId();
 
-      // 위젯 버튼 클릭으로 재오픈 → incentoPathChange의 eventType "C" → 재생성 세션 type "C"
-      await widget.close();
-      await widget.open();
+      await test.step('마이페이지로 이동만 하면 아직 그 페이지 세션은 없다', async () => {
+        await app.navTo('마이페이지');
+        await expect(page).toHaveURL(/\/mypage/);
+        // 경로 변경은 currentPath만 저장 → 위젯을 다시 열기 전까지 세션 POST 없음
+        expect(incento.posts('/mypage').length).toBe(0);
+      });
 
-      await expect.poll(() => incento.posts('/mypage').length).toBeGreaterThan(0);
-      expect(incento.posts('/mypage')[0]?.type).toBe('C');
+      await test.step('마이페이지에서 위젯을 다시 열면 새 경로로 새 세션이 생긴다(type C)', async () => {
+        // 위젯 버튼 클릭으로 재오픈 → incentoPathChange의 eventType "C" → 재생성 세션 type "C"
+        await widget.close();
+        await widget.open();
+        await expect.poll(() => incento.posts('/mypage').length).toBeGreaterThan(0);
+        expect(incento.posts('/mypage')[0]?.type).toBe('C');
+        expect(incento.lastSessionId()).not.toBe(homeSession);
+      });
     },
   );
 

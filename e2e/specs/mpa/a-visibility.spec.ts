@@ -21,7 +21,7 @@ import { WidgetPom } from '../../pages/widget.pom';
  * | /login     | 숨김         | —      |
  */
 test.describe('A. 위젯 버튼 노출 규칙 (MPA)', () => {
-  test('비로그인: 홈에서만 노출, 상품목록 숨김, 마이페이지는 로그인으로 리다이렉트', async ({ page }) => {
+  test('비로그인 사용자에게는 홈에서만 위젯 버튼이 보인다', async ({ page }) => {
     const app = new AppPom(page);
     const widget = new WidgetPom(page);
 
@@ -31,7 +31,7 @@ test.describe('A. 위젯 버튼 노출 규칙 (MPA)', () => {
       await widget.expectLauncherVisible();
     });
 
-    await test.step('상품 목록(하드 네비)에서는 위젯 버튼이 사라진다', async () => {
+    await test.step('상품 목록으로 이동하면 위젯 버튼이 사라진다', async () => {
       await app.navTo('상품 목록');
       await expect(page).toHaveURL(/\/products/);
       await widget.expectLauncherHidden();
@@ -44,7 +44,7 @@ test.describe('A. 위젯 버튼 노출 규칙 (MPA)', () => {
     });
   });
 
-  test('로그인: 홈/마이페이지 노출, 상품목록 숨김', async ({ page }) => {
+  test('로그인 사용자에게는 홈과 마이페이지에서 위젯 버튼이 보인다', async ({ page }) => {
     const app = new AppPom(page);
     const widget = new WidgetPom(page);
 
