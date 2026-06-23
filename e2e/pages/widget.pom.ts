@@ -40,6 +40,10 @@ export class WidgetPom {
     return cls.includes('incento_widget_open');
   }
 
+  async expectOpen(): Promise<void> {
+    await expect(this.container).toHaveClass(/incento_widget_open/);
+  }
+
   /** 위젯 열기(런처 클릭). iframe 오버레이 회피 위해 JS dispatch. */
   async open(): Promise<void> {
     if (await this.isOpen()) return;

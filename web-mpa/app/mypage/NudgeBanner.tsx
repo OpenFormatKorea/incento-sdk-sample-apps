@@ -11,6 +11,7 @@ declare global {
 export default function NudgeBanner() {
   return (
     <div
+      data-testid="mypage-nudge-banner"
       onClick={() => window.Incento?.('open')}
       style={{
         height: 160,

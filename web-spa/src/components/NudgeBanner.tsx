@@ -3,6 +3,7 @@ import Incento from '../incento.service'
 export default function NudgeBanner() {
   return (
     <div
+      data-testid="mypage-nudge-banner"
       onClick={() => Incento.open()}
       style={{
         height: 160,
