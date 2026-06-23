@@ -16,7 +16,7 @@ import { WidgetPom } from '../../pages/widget.pom';
  * 단, 자동 오픈 세션 type이 "P"로 찍히는 것은 양쪽 동일.
  */
 test.describe('C. 로그인 플로우 (MPA)', () => {
-  test('위젯에서 로그인하면 /login을 거쳐 returnUrl로 복귀하고 위젯이 다시 열린다(type P)', async ({
+  test('위젯에서 로그인하면 로그인 화면을 거쳐 홈으로 돌아오고 위젯이 다시 열린다', async ({
     page,
     incento,
   }) => {
@@ -32,7 +32,7 @@ test.describe('C. 로그인 플로우 (MPA)', () => {
 
     const sessionBeforeLogin = incento.lastSessionId();
 
-    await test.step('위젯에서 로그인을 누르면 세션이 종료되고 /login(popup 쿼리)으로 이동한다', async () => {
+    await test.step('위젯에서 로그인을 누르면 세션이 종료되고 로그인 화면으로 이동한다', async () => {
       await widget.clickLoginInWidget();
 
       await expect(page).toHaveURL(/\/login\?show_incento_popup=true/);
@@ -41,7 +41,7 @@ test.describe('C. 로그인 플로우 (MPA)', () => {
         .toBe(true);
     });
 
-    await test.step('로그인을 마치면 returnUrl로 복귀하고 위젯이 type P로 다시 열린다', async () => {
+    await test.step('로그인을 마치면 홈으로 돌아오고 위젯이 다시 열린다', async () => {
       await page.getByPlaceholder('아이디').fill('member_001');
       await page.getByPlaceholder('비밀번호').fill('pw1234');
       await page.getByRole('button', { name: '로그인' }).click();
