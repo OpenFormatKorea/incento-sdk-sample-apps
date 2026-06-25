@@ -68,6 +68,11 @@ object IncentoService {
         if (debugMode) android.util.Log.d("Incento", message)
     }
 
+    // 수동 테스트용 로그. 일반 로그(Incento)와 태그를 분리해 따로 필터링할 수 있게 한다.
+    private fun testLog(message: String) {
+        if (debugMode) android.util.Log.d("Incento-test", message)
+    }
+
     // MARK: - Public API
 
     /**
@@ -112,6 +117,7 @@ object IncentoService {
                 "&isLoggedIn=${token != null}"
             widgetUrl = "$WIDGET_BASE_URL?$params"
             sessionPath = currentPath
+            testLog("위젯 로드 path=$currentPath (세션은 오픈 시 생성됨)")
 
             val launcherConfig = launcherConfigDeferred.await()
             mainHandler.post { mountWidget(activity, launcherConfig) }
@@ -142,6 +148,7 @@ object IncentoService {
         if (path != currentPath && backdropView?.visibility == View.VISIBLE) {
             closeWidget()
         }
+        testLog("setPath $currentPath → $path")
         currentPath = path
     }
 
@@ -474,6 +481,7 @@ object IncentoService {
     private fun openWidget(eventType: String) {
         log("widgetOpen")
         if (sessionPath != null && currentPath != sessionPath) {
+            testLog("새 세션 트리거 path=$currentPath type=$eventType")
             sendToWidget(
                 JSONObject()
                     .put("type", "incentoPathChange")
@@ -481,6 +489,8 @@ object IncentoService {
                     .put("eventType", eventType),
             )
             sessionPath = currentPath
+        } else {
+            testLog("경로변경 없음·세션 유지 path=$currentPath type=$eventType")
         }
         backdropView?.visibility = View.VISIBLE
         val interp = DecelerateInterpolator(2f)
@@ -513,6 +523,7 @@ object IncentoService {
         })
         set.start()
         if (launcherVisible) launcherView?.visibility = View.VISIBLE
+        testLog("close 전송 → 세션 종료 PATCH path=$currentPath")
         webView?.evaluateJavascript("window.postMessage({ type: 'close', message: '' }, '*')", null)
         emit("widgetClose")
     }

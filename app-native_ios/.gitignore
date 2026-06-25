@@ -1,1 +1,4 @@
 Secrets.swift
+
+# Xcode user-specific state (UI 상태 등, 커밋 대상 아님)
+*.xcuserstate

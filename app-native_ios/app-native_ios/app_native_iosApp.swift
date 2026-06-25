@@ -38,16 +38,28 @@ struct app_native_iosApp: App {
     private func bootIncento() {
         let shouldOpen = auth.pendingWidgetOpen && auth.isLoggedIn
         auth.pendingWidgetOpen = false
+        // 위젯 [로그인] 흐름으로 로그인한 경우: 홈으로 리다이렉트 후 홈에서 위젯 자동 오픈.
+        if shouldOpen { auth.selectedTab = 0 }
         IncentoService.shared.shutdown()
         IncentoService.shared.boot(
             apiKey: Secrets.incentoApiKey,
             userId: auth.username,
             userCreatedAt: mockUserCreatedAt(auth.username),
-            pagePath: "/",
+            pagePath: currentPath(),
             visible: auth.isLoggedIn,
             autoOpen: shouldOpen,
             debug: true,
         )
+    }
+
+    // 재부트(로그인/로그아웃) 시 현재 탭에 맞는 경로로 부트한다.
+    // 하드코딩 "/"로 부트하면 마이페이지 로그인 후에도 SDK 경로가 "/"로 남는 문제가 있어 분기한다.
+    private func currentPath() -> String {
+        switch auth.selectedTab {
+        case 1: return "/products"
+        case 2: return auth.isLoggedIn ? "/mypage" : "/login"
+        default: return "/"
+        }
     }
 
     // 독립몰 자체 회원 DB를 시뮬레이션합니다.
