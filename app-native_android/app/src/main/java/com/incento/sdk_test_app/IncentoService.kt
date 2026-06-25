@@ -112,6 +112,7 @@ object IncentoService {
                 "&isLoggedIn=${token != null}"
             widgetUrl = "$WIDGET_BASE_URL?$params"
             sessionPath = currentPath
+            log("[TEST] 위젯 로드 path=$currentPath (세션은 오픈 시 생성됨)")
 
             val launcherConfig = launcherConfigDeferred.await()
             mainHandler.post { mountWidget(activity, launcherConfig) }
@@ -142,6 +143,7 @@ object IncentoService {
         if (path != currentPath && backdropView?.visibility == View.VISIBLE) {
             closeWidget()
         }
+        log("[TEST] setPath $currentPath → $path")
         currentPath = path
     }
 
@@ -474,6 +476,7 @@ object IncentoService {
     private fun openWidget(eventType: String) {
         log("widgetOpen")
         if (sessionPath != null && currentPath != sessionPath) {
+            log("[TEST] 새 세션 트리거 path=$currentPath type=$eventType")
             sendToWidget(
                 JSONObject()
                     .put("type", "incentoPathChange")
@@ -481,6 +484,8 @@ object IncentoService {
                     .put("eventType", eventType),
             )
             sessionPath = currentPath
+        } else {
+            log("[TEST] 경로변경 없음·세션 유지 path=$currentPath type=$eventType")
         }
         backdropView?.visibility = View.VISIBLE
         val interp = DecelerateInterpolator(2f)
@@ -513,6 +518,7 @@ object IncentoService {
         })
         set.start()
         if (launcherVisible) launcherView?.visibility = View.VISIBLE
+        log("[TEST] close 전송 → 세션 종료 PATCH path=$currentPath")
         webView?.evaluateJavascript("window.postMessage({ type: 'close', message: '' }, '*')", null)
         emit("widgetClose")
     }
