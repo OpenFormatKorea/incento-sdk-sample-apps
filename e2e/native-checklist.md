@@ -3,22 +3,31 @@
 `e2e/specs`의 시나리오 A~F를 iOS/Android 네이티브 앱에서 손으로 확인한다. 프록시 없이 **디버그 로그 + 화면**으로만 판정.
 
 ## 로그 보는 법
-두 앱 다 `boot(debug:true)`
+두 앱 다 `boot(debug:true)`. 로그 접두사가 두 종류로 갈린다:
+- `[Incento]` — SDK 일반 로그(`widgetOpen`/`widgetClose` 등)
+- `[Incento-test]` — 이 수동 테스트용으로 추가한 세션 추적 로그
 
-- **iOS**: Xcode 콘솔에서 `[Incento]` 필터
-- **Android**: Logcat에서 `Incento` 필터
+| 보고 싶은 것 | iOS (Xcode 콘솔 필터) | Android (Logcat 필터) |
+|---|---|---|
+| 테스트 로그만 | `[Incento-test]` | `tag:Incento-test` |
+| 일반 로그만(테스트 제외) | `[Incento]` (닫는 `]`까지) | `tag:Incento -tag:Incento-test` |
+| 둘 다 | `[Incento` (괄호 없이) | `tag:Incento` |
 
-추가해둔 테스트 로그(`IncentoService` 안):
+`[Incento]`(일반) 로그:
 | 로그 | 의미 |
 |---|---|
 | `widgetOpen` | 런처 탭으로 열림 (오픈방식 C) |
 | `widgetOpen (programmatic)` | `open()` 호출로 열림 — 혜택받기·넛징배너·로그인후 자동오픈 (오픈방식 E) |
 | `widgetClose` | 닫힘 |
-| `[TEST] 위젯 로드 path=… (세션은 오픈 시 생성됨)` | 부트(앱 시작·로그인 후 재부트) 시 위젯 WebView가 그 경로로 로드됨. **세션 생성 아님**(세션은 오픈 시). 부트 경로 확인용 |
-| `[TEST] 새 세션 트리거 path=… type=…` | 경로가 바뀐 뒤 첫 오픈 → **새 위젯 세션 생성** |
-| `[TEST] 경로변경 없음·세션 유지 path=…` | 같은 경로 재오픈 → **세션 재사용**(새 세션 X) |
-| `[TEST] close 전송 → 세션 종료 PATCH path=…` | 닫을 때마다 1건 (닫은 횟수 = PATCH 횟수) |
-| `[TEST] setPath A → B` | 탭 전환으로 경로 갱신 |
+
+`[Incento-test]`(테스트) 로그:
+| 로그 | 의미 |
+|---|---|
+| `위젯 로드 path=… (세션은 오픈 시 생성됨)` | 부트(앱 시작·로그인 후 재부트) 시 위젯 WebView가 그 경로로 로드됨. **세션 생성 아님**(세션은 오픈 시). 부트 경로 확인용 |
+| `새 세션 트리거 path=… type=…` | 경로가 바뀐 뒤 첫 오픈 → **새 위젯 세션 생성** |
+| `경로변경 없음·세션 유지 path=…` | 같은 경로 재오픈 → **세션 재사용**(새 세션 X) |
+| `close 전송 → 세션 종료 PATCH path=…` | 닫을 때마다 1건 (닫은 횟수 = PATCH 횟수) |
+| `setPath A → B` | 탭 전환으로 경로 갱신 |
 
 > 실제 세션 id 값까지 보려면 프록시(`api.incento.kr/.../sdk/log/event/`)가 필요. 이번 범위 밖.
 

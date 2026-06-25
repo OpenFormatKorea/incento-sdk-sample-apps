@@ -36,6 +36,11 @@ public final class IncentoService: NSObject {
         if debugMode { print("[Incento] \(message)") }
     }
 
+    /// 수동 테스트용 로그. 일반 로그와 분리해서 필터링할 수 있도록 접두사를 달리한다.
+    private func testLog(_ message: String) {
+        if debugMode { print("[Incento-test] \(message)") }
+    }
+
     // MARK: - Public API
 
     /// 위젯을 초기화하고 런처를 띄운다. 앱 시작 시 1회 호출한다.
@@ -86,7 +91,7 @@ public final class IncentoService: NSObject {
         if path != currentPath, backdropView?.isHidden == false {
             closeWidget()
         }
-        log("[TEST] setPath \(currentPath) → \(path)")
+        testLog("setPath \(currentPath) → \(path)")
         currentPath = path
     }
 
@@ -151,7 +156,7 @@ public final class IncentoService: NSObject {
         ]
         widgetUrl = components.url?.absoluteString ?? ""
         sessionPath = currentPath
-        log("[TEST] 위젯 로드 path=\(currentPath) (세션은 오픈 시 생성됨)")
+        testLog("위젯 로드 path=\(currentPath) (세션은 오픈 시 생성됨)")
 
         let launcher = await launcherConfig
         await MainActor.run { mountWidget(launcherConfig: launcher) }
@@ -412,11 +417,11 @@ public final class IncentoService: NSObject {
     private func openWidget(eventType: String) {
         guard let container = containerView, let window = windowRef else { return }
         if sessionPath != nil, currentPath != sessionPath {
-            log("[TEST] 새 세션 트리거 path=\(currentPath) type=\(eventType)")
+            testLog("새 세션 트리거 path=\(currentPath) type=\(eventType)")
             sendToWidget(["type": "incentoPathChange", "path": currentPath, "eventType": eventType])
             sessionPath = currentPath
         } else {
-            log("[TEST] 경로변경 없음·세션 유지 path=\(currentPath) type=\(eventType)")
+            testLog("경로변경 없음·세션 유지 path=\(currentPath) type=\(eventType)")
         }
         backdropView?.isHidden = false
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.85, initialSpringVelocity: 0.3) {
@@ -469,7 +474,7 @@ public final class IncentoService: NSObject {
             self.backdropView?.isHidden = true
         }
         if launcherVisible { launcherButton?.isHidden = false }
-        log("[TEST] close 전송 → 세션 종료 PATCH path=\(currentPath)")
+        testLog("close 전송 → 세션 종료 PATCH path=\(currentPath)")
         sendToWidget(["type": "close", "message": ""])
         emit("widgetClose")
     }
