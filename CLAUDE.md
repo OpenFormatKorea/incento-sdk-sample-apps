@@ -1,22 +1,35 @@
-# incento-sdk-sample-apps — agent guide
+# incento-sdk-sample-apps
 
-Per-platform reference apps showing customers how to embed the Incento widget/SDK outside Cafe24/MakeShop: `web-spa/` (Vite + React), `web-mpa/` (Next.js 16), `app-webview_cross_platform/` (React Native), `app-native_android/` (Kotlin/Compose), `app-native_ios/` (Swift/SwiftUI), plus a shared `e2e/` Playwright suite.
+고객사가 Incento SDK를 자체 앱/웹에 연동하는 방법을 보여주는 **플랫폼별 샘플 앱 모음**.
+SDK 자체가 아니라 SDK 소비자다.
+앱별 스택·시나리오는 `README.md` 참고.
 
-Root monorepo CLAUDE.md is also loaded in monorepo sessions — don't duplicate it.
+## 형제 레포 — 함께 고칠 때가 많다
 
-## Load order (JIT)
+SDK 동작을 바꾸면 아래 세 레포가 세트로 움직인다. (경로는 로컬 `~/` 기준)
 
-- Root `README.md` (Korean) — platform matrix + the shared 3-tab UX scenario every sample implements. Read first.
-- `e2e/README.md` (Korean, detailed) — mocking boundary (mock api.incento.kr; keep the real SDK script + widget iframe), SPA-vs-MPA behavioral differences, scenarios, stable selectors. Read before touching tests or adding a platform.
-- `web-mpa/AGENTS.md` — **Next.js 16 differs from training data; read it before editing web-mpa.**
-- Each sample's own README for its toolchain.
+- `scripts` (`src/sdk/`) — JS SDK **원본**. 번들 결과가 `s3.incento.kr/scripts/sdk/incento.min.js`로 배포되고, 웹 샘플들이 이 스니펫을 로드한다.
+- `incento-developers` (`content/docs/`) — 개발자센터([developers.incento.kr](https://developers.incento.kr)) 문서 원본.
+- **이 레포** — 위 SDK/문서 변경이 실제로 어떻게 쓰이는지 보여주는 샘플.
 
-## Key facts
+SDK API·동작을 바꿨다면: 여기 샘플 코드 + 개발자센터 문서를 같이 동기화했는지 확인.
 
-- Each sample is an independent project with its own toolchain (npm / Gradle / Xcode + Pods) — there is no root package manager; `cd` into the target app.
-- Web samples load the hosted SDK (`https://s3.incento.kr/scripts/sdk/incento.min.js`) through a thin `incento.service.ts` wrapper and drive the queue-based `Incento(...)` global (`boot/show/hide/open/close/setPath/on`).
-- Native samples reimplement the same lifecycle directly against `https://api.incento.kr/api/open` and render `https://widget.incento.kr/v2` in a WebView.
-- SPA and MPA intentionally diverge (navigation, boot timing, auth persistence) — don't "unify" them; the divergence is documented behavior.
-- Samples must track SDK behavior in `scripts/src/sdk/` and docs in `developers/`.
+## 네이티브 IncentoService는 원본이 아니라 사본
 
-This is a peripheral repo — expand this guide when it comes under active development.
+- `app-native_android/.../IncentoService.kt`, `app-native_ios/app-native_ios/IncentoService.swift`
+  는 `scripts/src/sdk/snippets/` 에서 동기화된 **사본**이다.
+- 여기서 임의로 수정하지 말고 스니펫을 원본으로 삼아 sync 한다 (`chore/sync-native-snippets` 브랜치 참고).
+
+## 공통 시나리오가 사양의 원천
+
+5개 앱은 모두 **동일한 3탭 시나리오(A~F)** 를 구현해야 한다. 동작을 바꾸기 전에 사양부터 읽을 것:
+
+- 개요: `README.md`
+- 웹 실행 사양: `e2e/specs/{mpa,spa}/{a..f}-*.spec.ts`
+- 네이티브 수동 사양: `e2e/native-checklist.md`
+
+## 테스트
+
+- **웹(spa/mpa)**: `e2e/` Playwright.
+- **네이티브**: 프록시 없이 수동 확인 — `e2e/native-checklist.md`.
+  `boot(debug:true)` 로그 접두사로 구분: `[Incento]`(SDK 일반 로그) vs `[Incento-test]`(이 앱에 넣은 세션 추적 로그).
